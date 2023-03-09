@@ -4,20 +4,19 @@ Created on Tue Jun  8 14:03:09 2021
 
 @author: Administrator
 """
-import pygame
-import os
-import sys
-import random
-import queue
-import time
-from pygame.locals import *
-from collections import Counter
-from socket import *
-from time import ctime
-from pygame.color import *
 import json
-import select
+import os
+import queue
+import random
 import socket
+import sys
+from socket import *
+
+import pygame
+import select
+from pygame.color import *
+from pygame.locals import *
+
 from bf_button import BFButton
 from imputbox import InputBox
 
@@ -602,7 +601,10 @@ def main(mode):
                                                 (255, 0, 0), 3, star_list[0])
                         star_list.append(cannonball)
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    if event.key == pygame.K_n:
+                        for i in range(4):
+                            draw_text("{}号星球 k/d:{1}/{2}")
+                    elif event.key == pygame.K_UP or event.key == pygame.K_w:
                         key[0] = 1
                     elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                         key[1] = -1
