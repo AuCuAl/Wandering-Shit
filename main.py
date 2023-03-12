@@ -187,13 +187,16 @@ def developing(btn):
 def draw_text(text, x, y, size):
     pygame.font.init()
     fontObj = pygame.font.SysFont('SimHei', size)
-    textSurfaceObj = fontObj.render(text, True, white, black)
+    textSurfaceObj = fontObj.render(text, True, (255, 255, 255, 100), black)
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.center = (x, y)
     screen.blit(textSurfaceObj, textRectObj)
     pygame.display.update()
 
 
+def draw_statistics_list(statistics_list):
+    for i in range(len(statistics_list)):
+        draw_text(statistics_list[i], screenx / 2, screeny / 20 * i, 20)
 break_signal = False
 
 
