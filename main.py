@@ -69,6 +69,7 @@ input_box_y = screeny * 0.1
 # 颜色
 white = (255, 255, 255)
 black = (0, 0, 0)
+gray = (127, 127, 127)
 
 dev = False
 
@@ -77,7 +78,7 @@ queue_len = 20
 roaming = queue.Queue(queue_len)
 rear_len = 200
 
-
+FPS = 120
 
 def menu(btn):
     global dev
@@ -166,7 +167,7 @@ def start_3(btn):
         button4_menu.draw()
         input_box.draw(screen)
         pygame.display.update()
-        time_passed_2 = clock.tick(60)  # 帧率过高会发生闪烁
+        time_passed_2 = clock.tick(FPS)  # 帧率过高会发生闪烁
 
     button4_menu.visible = False
     input_box.visible = False
@@ -185,23 +186,40 @@ def developing(btn):
     dev = True
 
 
-def draw_text(text, x, y, size):
+def draw_text(text, x, y, size, surface):
     pygame.font.init()
     fontObj = pygame.font.SysFont('SimHei', size)
-    textSurfaceObj = fontObj.render(text, True, (255, 255, 255, 100), black)
+    textSurfaceObj = fontObj.render(text, True, white, black)
+    textSurfaceObj.set_alpha(255)
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.center = (x, y)
-    screen.blit(textSurfaceObj, textRectObj)
+    surface.blit(textSurfaceObj, textRectObj)
 
 
 def draw_statistics_list(statistics_list):
+    statistics_list_Obj = pygame.Surface((screenx, screeny))
+    statistics_list_Obj.fill(black)
+    statistics_list_Obj.set_alpha(127)
+    screen.blit(statistics_list_Obj, (0, 0, screenx, screeny))
     for i in range(len(statistics_list)):
-        draw_text(statistics_list[i], screenx / 2, screeny / 20 * i, 20)
+        draw_text(statistics_list[i], screenx / 2, screeny / 20 * (i + 1), 20, screen)
+
+
 break_signal = False
 
 
+# def darken_screen():
+#     dark_img = screen.convert_alpha()
+#     #  透明度（opacity）等于零0为完全不透明，等于255时为完全透明
+#     opacity = 127
+#     #  fill方法的第一个color参数需传入元组
+#     #  元组的前三个整数控制RGB数值，最后一个为透明度
+#     dark_img.fill((*(255, 255, 255),opacity))
+#     screen.blit(dark_img,(0,0))
+
 # mode:0 - 三体壁纸  1 - 练习场  2 - 多人游戏（房主）  3 - 多人游戏（房客）
 def main(mode):
+    global FPS
     global break_signal
     break_signal = False
     print_statistics_list = False
@@ -493,7 +511,7 @@ def main(mode):
                                 draw_statistics_list(star_statistics_list)
 
                             pygame.display.update()
-                            time_passed = clock.tick(120)  # 画面帧率
+                            time_passed = clock.tick(FPS)  # 画面帧率
 
         if link:
             if mode == 3:
@@ -503,7 +521,7 @@ def main(mode):
                     msg = key
                     msg1 = json.dumps(msg)
                     tcpCliSock.sendto(msg1.encode(), ADDR)
-                    # time_passed = clock.tick(20)  # 画面帧率
+                    # time_passed = clock.tick(FPS)  # 画面帧率
 
             else:
                 # 运算阶段
@@ -633,7 +651,7 @@ def main(mode):
                     draw_statistics_list(star_statistics_list)
 
                 pygame.display.update()
-                time_passed = clock.tick(120)  # 画面帧率
+                time_passed = clock.tick(FPS)  # 画面帧率
 
         for event in pygame.event.get():
             button4_menu.update(event)
