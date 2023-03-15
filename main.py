@@ -4,20 +4,19 @@ Created on Tue Jun  8 14:03:09 2021
 
 @author: Administrator
 """
-import pygame
-import os
-import sys
-import random
-import queue
-import time
-from pygame.locals import *
-from collections import Counter
-from socket import *
-from time import ctime
-from pygame.color import *
 import json
-import select
+import os
+import queue
+import random
 import socket
+import sys
+from socket import *
+
+import pygame
+import select
+from pygame.color import *
+from pygame.locals import *
+
 from bf_button import BFButton
 from imputbox import InputBox
 
@@ -77,6 +76,7 @@ dev = False
 queue_len = 20
 roaming = queue.Queue(queue_len)
 rear_len = 200
+
 
 
 def menu(btn):
@@ -188,13 +188,15 @@ def developing(btn):
 def draw_text(text, x, y, size):
     pygame.font.init()
     fontObj = pygame.font.SysFont('SimHei', size)
-    textSurfaceObj = fontObj.render(text, True, white, black)
+    textSurfaceObj = fontObj.render(text, True, (255, 255, 255, 100), black)
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.center = (x, y)
     screen.blit(textSurfaceObj, textRectObj)
-    pygame.display.update()
 
 
+def draw_statistics_list(statistics_list):
+    for i in range(len(statistics_list)):
+        draw_text(statistics_list[i], screenx / 2, screeny / 20 * i, 20)
 break_signal = False
 
 
@@ -202,6 +204,7 @@ break_signal = False
 def main(mode):
     global break_signal
     break_signal = False
+    print_statistics_list = False
     # 图片导入
     # 用于传送的数据
     msg = []
@@ -245,6 +248,16 @@ def main(mode):
             self.star_rear_len = rear_len
             self.star_rear = []
             self.star_rear_size = star_r / 2
+
+            # 战斗系统
+            self.blood = 100
+            self.attack = 200  # 撞击
+            self.remaining_cannonball = 0  # 剩余弹药
+            self.kill = 0
+            self.death = 0
+
+            self.statistics = 'b:' + str(self.blood) + '剩余弹药:' + str(self.remaining_cannonball) + 'k/d:' + str(
+                self.kill) + str(self.death)
 
         def calculate(self):
             # 限加速系统
@@ -312,15 +325,23 @@ def main(mode):
                 pygame.draw.circle(screen, self.star_color, self.star_rear[j], self.star_rear_size)
 
     class Cannonball(Star):
-        def __init__(self, star_m, star_pos, star_v, star_color, star_r, star_host):
+        def __init__(self, star_m, star_pos, star_v, star_color, star_r, star_master):
             Star.__init__(self, star_m, star_pos, star_v, star_color, star_r)
-            self.star_host = star_host
+            self.master = None
+
+            # 战斗系统
+            self.blood = 1
+            self.attack = 60
+            self.remaining_cannonball = None
 
     star1 = Star(0.5 * M, [0.0, 3 * AU], [20430.0, 0.0], (255, 255, 100), 10)
     star2 = Star(0.5 * M, [0.0, 4.5 * AU], [-7226.0, 0.0], (255, 100, 100), 10)
     star3 = Star(M, [0.0, -3.75 * AU], [-6652.0, 0.0], (255, 255, 255), 10)
     star4 = Star(Me, [AU, -3.75 * AU], [-6652.0, 27000.0], (100, 250, 255), 5)
     star_list = [star1, star2, star3, star4]
+    star_statistics_list = []
+    for star in star_list:
+        star_statistics_list.append(star.statistics)
 
     # 服务端参数定义
     if mode == 2:
@@ -468,6 +489,9 @@ def main(mode):
                             pygame.draw.circle(screen, (100, 250, 255),
                                                (int(x4 / p + screenx / 2), int(-y4 / p + screeny / 2)), 5)
 
+                            if print_statistics_list:
+                                draw_statistics_list(star_statistics_list)
+
                             pygame.display.update()
                             time_passed = clock.tick(120)  # 画面帧率
 
@@ -482,25 +506,58 @@ def main(mode):
                     # time_passed = clock.tick(20)  # 画面帧率
 
             else:
+                # 运算阶段
                 for k in range(n):
                     # 计算各个天体间的万有引力加速度:
                     for star_num1 in range(len(star_list)):
-                        if star_list[star_num1].live:
+                        if star_list[star_num1].live and star_list[star_num1].live != 2:
                             star_list[star_num1].star_a[0] = star_list[star_num1].star_a[1] = 0
                     for star_num1 in range(len(star_list)):
                         for star_num2 in range(star_num1 + 1, len(star_list)):
-                            if star_list[star_num1].live & star_list[star_num2].live:
+                            if star_list[star_num1].live and star_list[star_num1].live != 2 and star_list[
+                                star_num2].live and star_list[star_num2].live != 2:
                                 dr_x = star_list[star_num1].star_pos[0] - star_list[star_num2].star_pos[0]
                                 dr_y = star_list[star_num1].star_pos[1] - star_list[star_num2].star_pos[1]
                                 r = pow(dr_x * dr_x + dr_y * dr_y, 0.5)
                                 if r / p <= star_list[star_num1].star_r + star_list[star_num2].star_r:
                                     if star_list[star_num1].live == 3:
                                         if not star_list[star_num2].live == 3:
-                                            star_list[star_num2].live = 2
+                                            if star_list[star_num2].blood > star_list[star_num1].attack:
+                                                star_list[star_num2].blood -= star_list[star_num1].attack
+                                            else:
+                                                star_list[star_num2].blood = 0
+                                                star_list[star_num2].live = 2
+                                                star_list[star_num2].death += 1
+                                                if star_num2 <= 3:
+                                                    if star_num1 <= 3:
+                                                        star_list[star_num1].kill += 1
+                                                    else:
+                                                        star_list[star_num1].master.kill += 1
                                     else:
-                                        star_list[star_num1].live = 2
+                                        if star_list[star_num1].blood > star_list[star_num2].attack:
+                                            star_list[star_num1].blood -= star_list[star_num2].attack
+                                        else:
+                                            star_list[star_num1].blood = 0
+                                            star_list[star_num1].live = 2
+                                            star_list[star_num1].death += 1
+                                            if star_num2 <= 3:
+                                                if star_num1 <= 3:
+                                                    star_list[star_num1].kill += 1
+                                                else:
+                                                    star_list[star_num1].master.kill += 1
+
                                         if not star_list[star_num2].live == 3:
-                                            star_list[star_num2].live = 2
+                                            if star_list[star_num2].blood > star_list[star_num1].attack:
+                                                star_list[star_num2].blood -= star_list[star_num1].attack
+                                            else:
+                                                star_list[star_num2].blood = 0
+                                                star_list[star_num2].live = 2
+                                                star_list[star_num2].death += 1
+                                                if star_num1 <= 3:
+                                                    if star_num2 <= 3:
+                                                        star_list[star_num2].kill += 1
+                                                    else:
+                                                        star_list[star_num2].master.kill += 1
 
                                 star_list[star_num1].star_a[0] += - G * star_list[star_num2].star_m * dr_x / r / r / r
                                 star_list[star_num1].star_a[1] += - G * star_list[star_num2].star_m * dr_y / r / r / r
@@ -572,6 +629,9 @@ def main(mode):
                                 star_list[star_num1].live = 3
                         star_num1 += 1
 
+                if print_statistics_list:
+                    draw_statistics_list(star_statistics_list)
+
                 pygame.display.update()
                 time_passed = clock.tick(120)  # 画面帧率
 
@@ -600,9 +660,12 @@ def main(mode):
                                           star_list[0].star_pos[1] - AU * dr_y / r]
                         cannonball = Cannonball(0.01 * M, cannonball_pos, [40000 * dr_x / r, - 40000 * dr_y / r],
                                                 (255, 0, 0), 3, star_list[0])
+                        cannonball.master = star1
                         star_list.append(cannonball)
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    if event.key == pygame.K_n:
+                        print_statistics_list = True
+                    elif event.key == pygame.K_UP or event.key == pygame.K_w:
                         key[0] = 1
                     elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                         key[1] = -1
@@ -618,6 +681,8 @@ def main(mode):
                         pygame.quit()
                         sys.exit()
                 elif event.type == pygame.KEYUP:
+                    if event.key == pygame.K_n:
+                        print_statistics_list = False
                     if event.key == pygame.K_UP or event.key == pygame.K_w:
                         key[0] = 0
                     elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
