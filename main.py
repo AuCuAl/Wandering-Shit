@@ -141,7 +141,7 @@ def start_1(btn):
 def start_2(btn):
     screen.fill((0, 0, 0))
     button4_menu.visible = True
-    draw_text('正在等待连接……', screenx / 2, screeny / 2, 50)
+    draw_text('正在等待连接……', screenx / 2, screeny / 2, 50, screen)
     main(2)
 
 
@@ -163,7 +163,7 @@ def start_3(btn):
         if break_signal_2:
             break
         screen.fill((0, 0, 0))
-        draw_text('服务器地址：', screenx / 2, screeny * 0.4, 50)
+        draw_text('服务器地址：', screenx / 2, screeny * 0.4, 50, screen)
         button4_menu.draw()
         input_box.draw(screen)
         pygame.display.update()
@@ -172,7 +172,7 @@ def start_3(btn):
     button4_menu.visible = False
     input_box.visible = False
     screen.fill((0, 0, 0))
-    draw_text('正在连接至服务器……', screenx / 2, screeny / 2, 50)
+    draw_text('正在连接至服务器……', screenx / 2, screeny / 2, 50, screen)
     pygame.display.update()
     main(3)
 
@@ -186,9 +186,9 @@ def developing(btn):
     dev = True
 
 
-def draw_text(text, x, y, size, surface):
+def draw_text(text, x, y, font_size, surface):
     pygame.font.init()
-    fontObj = pygame.font.SysFont('SimHei', size)
+    fontObj = pygame.font.SysFont('SimHei', font_size)
     textSurfaceObj = fontObj.render(text, True, white, black)
     textSurfaceObj.set_alpha(255)
     textRectObj = textSurfaceObj.get_rect()
@@ -199,12 +199,10 @@ def draw_text(text, x, y, size, surface):
 def draw_statistics_list(statistics_list):
     statistics_list_Obj = pygame.Surface((screenx, screeny))
     statistics_list_Obj.fill(black)
-    statistics_list_Obj.set_alpha(127)
-    screen.blit(statistics_list_Obj, (0, 0, screenx, screeny))
+    statistics_list_Obj.set_alpha(180)
     for i in range(len(statistics_list)):
-        draw_text(statistics_list[i], screenx / 2, screeny / 20 * (i + 1), 20, screen)
-
-
+        draw_text(statistics_list[i], screenx / 2, screeny / 20 * (i + 1), screenx // 50, statistics_list_Obj)
+    screen.blit(statistics_list_Obj, (0, 0, screenx, screeny))
 break_signal = False
 
 
@@ -254,13 +252,15 @@ def main(mode):
     link = False
 
     class Star(object):
-        def __init__(self, star_m, star_pos, star_v, star_color, star_r):
+        def __init__(self, star_m, star_pos, star_v, star_color, star_r, star_name):
             self.star_m = star_m
             self.star_pos = star_pos
             self.star_v = star_v
             self.star_a = [0, 0]
             self.star_color = star_color
             self.star_r = star_r
+            self.star_name = star_name
+
             self.live = 1  # 0为死亡，1为存活，2为即将死亡，3为无敌状态
             self.count = 0
             self.star_rear_len = rear_len
@@ -274,8 +274,8 @@ def main(mode):
             self.kill = 0
             self.death = 0
 
-            self.statistics = 'b:' + str(self.blood) + '剩余弹药:' + str(self.remaining_cannonball) + 'k/d:' + str(
-                self.kill) + str(self.death)
+            self.statistics = str(star_name) + ': 剩余血量:' + str(self.blood) + '% 剩余弹药:' + str(
+                self.remaining_cannonball) + ' k/d:' + str(self.kill) + '/' + str(self.death)
 
         def calculate(self):
             # 限加速系统
@@ -352,10 +352,10 @@ def main(mode):
             self.attack = 60
             self.remaining_cannonball = None
 
-    star1 = Star(0.5 * M, [0.0, 3 * AU], [20430.0, 0.0], (255, 255, 100), 10)
-    star2 = Star(0.5 * M, [0.0, 4.5 * AU], [-7226.0, 0.0], (255, 100, 100), 10)
-    star3 = Star(M, [0.0, -3.75 * AU], [-6652.0, 0.0], (255, 255, 255), 10)
-    star4 = Star(Me, [AU, -3.75 * AU], [-6652.0, 27000.0], (100, 250, 255), 5)
+    star1 = Star(0.5 * M, [0.0, 3 * AU], [20430.0, 0.0], (255, 255, 100), 10, '黄')
+    star2 = Star(0.5 * M, [0.0, 4.5 * AU], [-7226.0, 0.0], (255, 100, 100), 10, '红')
+    star3 = Star(M, [0.0, -3.75 * AU], [-6652.0, 0.0], (255, 255, 255), 10, '白')
+    star4 = Star(Me, [AU, -3.75 * AU], [-6652.0, 27000.0], (100, 250, 255), 5, '蓝')
     star_list = [star1, star2, star3, star4]
     star_statistics_list = []
     for star in star_list:
