@@ -49,11 +49,16 @@ gasping_2 = pygame.mixer.Sound(r'audio/sounds/gasping2.mp3')
 gasping_3 = pygame.mixer.Sound(r'audio/sounds/gasping3.mp3')
 gasping_4 = pygame.mixer.Sound(r'audio/sounds/gasping4.mp3')
 
-fire = heng_1
-hit = ah_5
-kill = heng_1
-died = ah_1
-resolve = gasping_2
+eat = pygame.mixer.Sound(r'audio/sounds/bianfeng_sounds/eat.ogg')
+losesi = pygame.mixer.Sound(r'audio/sounds/bianfeng_sounds/losesi.ogg')
+sdie = pygame.mixer.Sound(r'audio/sounds/bianfeng_sounds/sdie.ogg')
+eat1 = pygame.mixer.Sound(r'audio/sounds/bianfeng_sounds/eat1.ogg')
+
+fire = eat
+hit = losesi
+kill = sdie
+died = sdie
+resolve = eat1
 
 # 创建窗口:
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (wherex, wherey)
